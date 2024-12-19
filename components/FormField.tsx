@@ -16,8 +16,15 @@ interface FormFieldProps {
 }
 
 export function FormField({ name, schema, value, onChange, loadRefData }: FormFieldProps) {
-  if (schema.$ref) {
-    return <RefField name={name} schema={schema} value={value} onChange={onChange} loadRefData={loadRefData} />
+  console.log('FormField processing:', name, schema)
+  
+  if (schema.$ref || (schema.items && (schema.items as JSONSchema7).$ref)) {
+    console.log('Using RefField for:', name)
+    const refSchema = {
+      ...schema,
+      $ref: schema.$ref || (schema.items as JSONSchema7).$ref
+    }
+    return <RefField name={name} schema={refSchema} value={value} onChange={onChange} loadRefData={loadRefData} />
   }
 
   switch (schema.type) {

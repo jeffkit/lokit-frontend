@@ -47,17 +47,7 @@ const exampleSchema = {
     skills: {
       type: 'array',
       title: 'Skills',
-      'x-component': 'Select',
-      'x-component-props': {
-        mode: 'multiple',
-        showSearch: true,
-        fieldNames: {
-          label: 'name',
-          value: 'id'
-        }
-      },
-      default: [],
-      'x-decorator': 'FormItem',
+      'x-display': 'multiselect',
       items: {
         $ref: '#/definitions/skill'
       }
