@@ -3,7 +3,9 @@ import { JSONSchema7 } from 'json-schema';
 export type FormDataType = Record<string, unknown>;
 
 export interface ExtendedJSONSchema7 extends JSONSchema7 {
-  'x-layout'?: 'vertical' | 'horizontal';
+  'x-display'?: 'table' | 'multiselect';
+  'x-primary-key'?: string;
+  'x-ref-type'?: 'reference' | 'value';
 }
 
 export interface FieldProps {

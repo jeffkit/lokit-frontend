@@ -32,12 +32,26 @@ export function MultiSelectField({
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
 
+  // 确保 value 是数组
+  const valueArray = Array.isArray(value) ? value : []
+
   // 获取当前选中项的 ID 集合
   const selectedIds = new Set(
-    Array.isArray(value)
-      ? value.map(v => isSimpleType ? v : (v as Option).id)
-      : []
+    valueArray.map(v => {
+      if (v === null || v === undefined) return ''
+      return typeof v === 'string' ? v : v.id
+    }).filter(Boolean)
   )
+
+  // 获取要显示的选中项
+  const selectedItems = valueArray.map(v => {
+    if (v === null || v === undefined) return null
+    if (typeof v === 'string') {
+      const option = options.find(opt => opt.id === v)
+      return option || { id: v, name: v }
+    }
+    return v
+  }).filter(Boolean)
 
   // 过滤选项
   const filteredOptions = options.filter(option => {
@@ -50,30 +64,31 @@ export function MultiSelectField({
 
   // 处理选择/取消选择
   const toggleOption = (option: Option) => {
-    const newValue = Array.isArray(value) ? [...value] : []
     const optionId = option.id
-
     if (selectedIds.has(optionId)) {
       // 移除选项
-      const filteredValue = newValue.filter(v => 
-        isSimpleType 
-          ? v !== optionId 
-          : (v as Option).id !== optionId
-      )
-      onChange(filteredValue)
+      const newValue = isSimpleType
+        ? valueArray.filter(v => v !== optionId)
+        : valueArray.filter(v => {
+            if (v === null || v === undefined) return false
+            return typeof v === 'string' ? v !== optionId : v.id !== optionId
+          })
+      onChange(newValue)
     } else {
       // 添加选项
       const itemToAdd = isSimpleType ? optionId : option
-      onChange([...newValue, itemToAdd])
+      onChange([...valueArray, itemToAdd])
     }
   }
 
   // 删除已选项
   const handleRemove = (itemToRemove: string | Option) => {
-    const id = isSimpleType ? itemToRemove : (itemToRemove as Option).id
-    const newValue = Array.isArray(value)
-      ? value.filter(v => (isSimpleType ? v !== id : (v as Option).id !== id))
-      : []
+    if (itemToRemove === null || itemToRemove === undefined) return
+    const id = typeof itemToRemove === 'string' ? itemToRemove : itemToRemove.id
+    const newValue = valueArray.filter(v => {
+      if (v === null || v === undefined) return false
+      return typeof v === 'string' ? v !== id : v.id !== id
+    })
     onChange(newValue)
   }
 
@@ -87,14 +102,14 @@ export function MultiSelectField({
             onClick={() => setIsOpen(true)}
           >
             <div className="flex flex-wrap gap-2">
-              {Array.isArray(value) && value.length > 0 ? (
-                value.map((item, index) => (
+              {selectedItems.length > 0 ? (
+                selectedItems.map((item) => (
                   <Badge
-                    key={isSimpleType ? item : (item as Option).id}
+                    key={typeof item === 'string' ? item : item.id}
                     variant="secondary"
                     className="flex items-center gap-1"
                   >
-                    {isSimpleType ? item : (item as Option).name}
+                    {typeof item === 'string' ? item : item.name}
                     <button
                       type="button"
                       onClick={(e) => {

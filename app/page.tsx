@@ -14,6 +14,7 @@ const exampleSchema = {
     address: {
       type: 'object',
       title: 'Address',
+      'x-ref-type': 'value',
       properties: {
         street: { type: 'string', title: 'Street' },
         city: { type: 'string', title: 'City' },
@@ -22,7 +23,8 @@ const exampleSchema = {
     },
     refAddress: {
       $ref: '#/definitions/address',
-      title: 'Reference Address'
+      title: 'Reference Address',
+      'x-ref-type': 'reference'
     },
     favoriteColor: {
       $ref: '#/definitions/color',
@@ -50,6 +52,7 @@ const exampleSchema = {
       type: 'array',
       title: 'Skills',
       'x-display': 'multiselect',
+      'x-ref-type': 'reference',
       items: {
         $ref: '#/definitions/skill'
       }
@@ -62,7 +65,9 @@ const exampleSchema = {
     },
     address: {
       type: 'object',
+      'x-primary-key': 'id',
       properties: {
+        id: { type: 'string', title: 'ID' },
         street: { type: 'string', title: 'Street' },
         city: { type: 'string', title: 'City' },
         country: { type: 'string', title: 'Country' }
@@ -70,6 +75,7 @@ const exampleSchema = {
     },
     skill: {
       type: 'object',
+      'x-primary-key': 'id',
       properties: {
         id: { type: 'string' },
         name: { type: 'string' },
