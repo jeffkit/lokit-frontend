@@ -2,6 +2,8 @@
 
 import { DynamicForm } from '@/components/DynamicForm'
 import { JSONSchema7 } from 'json-schema'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState } from 'react'
 
 const exampleSchema = {
   type: 'object',
@@ -110,13 +112,29 @@ const loadRefData = async (refKey: string, value?: string) => {
 }
 
 export default function Home() {
+  const [showDialog, setShowDialog] = useState(false)
+  const [formData, setFormData] = useState<any>(null)
+
   const handleSubmit = (data: any) => {
     console.log('Form submitted with data:', data)
+    setFormData(data)
+    setShowDialog(true)
   }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 w-full max-w-7xl mx-auto">
       <DynamicForm schema={exampleSchema} onSubmit={handleSubmit} loadRefData={loadRefData} />
+      
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-[800px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>提交的表单数据</DialogTitle>
+          </DialogHeader>
+          <pre className="bg-gray-100 p-4 rounded-md overflow-x-auto">
+            {JSON.stringify(formData, null, 2)}
+          </pre>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
