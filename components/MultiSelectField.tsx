@@ -7,87 +7,91 @@ import { X, Plus, Check } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
 interface Option {
-  id: string
-  name: string
   [key: string]: any
 }
 
-interface MultiSelectFieldProps {
+interface MultiSelectFieldProps<T = any> {
   title: string
-  value: Option[] | string[]
+  value: T[]
   options: Option[]
-  onChange: (value: Option[] | string[]) => void
+  onChange: (value: T[]) => void
   isSimpleType?: boolean
   searchPlaceholder?: string
+  displayKey?: string
+  valueKey?: string
 }
 
-export function MultiSelectField({
+export function MultiSelectField<T = any>({
   title,
   value = [],
   options,
   onChange,
   isSimpleType = false,
-  searchPlaceholder = "Search..."
-}: MultiSelectFieldProps) {
+  searchPlaceholder = "Search...",
+  displayKey = 'name',
+  valueKey = 'id'
+}: MultiSelectFieldProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
 
   // 确保 value 是数组
   const valueArray = Array.isArray(value) ? value : []
 
-  // 获取当前选中项的 ID 集合
+  // 获取选项的显示值
+  const getDisplayValue = (option: Option) => {
+    return option[displayKey] || option[valueKey] || String(option)
+  }
+
+  // 获取选项的标识值
+  const getValueKey = (option: Option) => {
+    return option[valueKey] || option
+  }
+
+  // 获取当前选中项的标识值集合
   const selectedIds = new Set(
     valueArray.map(v => {
       if (v === null || v === undefined) return ''
-      return typeof v === 'string' ? v : v.id
+      return typeof v === 'object' ? getValueKey(v) : v
     }).filter(Boolean)
   )
-
-  // 获取要显示的选中项
-  const selectedItems = valueArray.map(v => {
-    if (v === null || v === undefined) return null
-    if (typeof v === 'string') {
-      const option = options.find(opt => opt.id === v)
-      return option || { id: v, name: v }
-    }
-    return v
-  }).filter(Boolean)
 
   // 过滤选项
   const filteredOptions = options.filter(option => {
     if (!searchTerm) return true
     const searchString = searchTerm.toLowerCase()
-    const nameMatch = option.name.toLowerCase().includes(searchString)
-    const idMatch = option.id.toLowerCase().includes(searchString)
-    return nameMatch || idMatch
+    const displayValue = getDisplayValue(option).toLowerCase()
+    const keyValue = String(getValueKey(option)).toLowerCase()
+    return displayValue.includes(searchString) || keyValue.includes(searchString)
   })
 
   // 处理选择/取消选择
   const toggleOption = (option: Option) => {
-    const optionId = option.id
-    if (selectedIds.has(optionId)) {
+    const optionKey = getValueKey(option)
+    if (selectedIds.has(optionKey)) {
       // 移除选项
-      const newValue = isSimpleType
-        ? valueArray.filter(v => v !== optionId)
-        : valueArray.filter(v => {
-            if (v === null || v === undefined) return false
-            return typeof v === 'string' ? v !== optionId : v.id !== optionId
-          })
-      onChange(newValue)
+      const newValue = valueArray.filter(v => {
+        if (v === null || v === undefined) return false
+        return typeof v === 'object' 
+          ? getValueKey(v) !== optionKey 
+          : v !== optionKey
+      })
+      onChange(newValue as T[])
     } else {
       // 添加选项
-      const itemToAdd = isSimpleType ? optionId : option
-      onChange([...valueArray, itemToAdd])
+      const itemToAdd = isSimpleType ? optionKey : option
+      onChange([...valueArray, itemToAdd] as T[])
     }
   }
 
   // 删除已选项
-  const handleRemove = (itemToRemove: string | Option) => {
-    if (itemToRemove === null || itemToRemove === undefined) return
-    const id = typeof itemToRemove === 'string' ? itemToRemove : itemToRemove.id
+  const handleRemove = (item: T) => {
+    if (item === null || item === undefined) return
+    const itemKey = typeof item === 'object' ? getValueKey(item) : item
     const newValue = valueArray.filter(v => {
       if (v === null || v === undefined) return false
-      return typeof v === 'string' ? v !== id : v.id !== id
+      return typeof v === 'object' 
+        ? getValueKey(v) !== itemKey
+        : v !== itemKey
     })
     onChange(newValue)
   }
@@ -97,19 +101,16 @@ export function MultiSelectField({
       <Label>{title}</Label>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <div 
-            className="min-h-[2.5rem] w-full rounded-md border border-input bg-transparent px-3 py-2 cursor-pointer hover:bg-accent/50"
-            onClick={() => setIsOpen(true)}
-          >
+          <div className="min-h-[2.5rem] w-full rounded-md border border-input bg-transparent px-3 py-2 cursor-pointer hover:bg-accent/50">
             <div className="flex flex-wrap gap-2">
-              {selectedItems.length > 0 ? (
-                selectedItems.map((item) => (
+              {valueArray.length > 0 ? (
+                valueArray.map((item) => (
                   <Badge
-                    key={typeof item === 'string' ? item : item.id}
+                    key={typeof item === 'object' ? getValueKey(item) : String(item)}
                     variant="secondary"
                     className="flex items-center gap-1"
                   >
-                    {typeof item === 'string' ? item : item.name}
+                    {typeof item === 'object' ? getDisplayValue(item) : String(item)}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -128,7 +129,7 @@ export function MultiSelectField({
             </div>
           </div>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Select {title}</DialogTitle>
             <DialogDescription>
@@ -146,34 +147,28 @@ export function MultiSelectField({
               />
             </div>
             <div className="mt-2 max-h-[300px] overflow-y-auto rounded-md border">
-              {filteredOptions.length === 0 ? (
-                <div className="p-4 text-sm text-muted-foreground text-center">
-                  No results found.
-                </div>
-              ) : (
-                filteredOptions.map(option => (
-                  <div
-                    key={option.id}
-                    onClick={() => toggleOption(option)}
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-accent",
-                      selectedIds.has(option.id) && "bg-accent"
+              {filteredOptions.map(option => (
+                <div
+                  key={getValueKey(option)}
+                  onClick={() => toggleOption(option)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-accent",
+                    selectedIds.has(getValueKey(option)) && "bg-accent"
+                  )}
+                >
+                  <div className={cn(
+                    "flex h-4 w-4 items-center justify-center rounded-sm border",
+                    selectedIds.has(getValueKey(option)) 
+                      ? "bg-primary border-primary" 
+                      : "border-primary"
+                  )}>
+                    {selectedIds.has(getValueKey(option)) && (
+                      <Check className="h-3 w-3 text-primary-foreground" />
                     )}
-                  >
-                    <div className={cn(
-                      "flex h-4 w-4 items-center justify-center rounded-sm border",
-                      selectedIds.has(option.id) 
-                        ? "bg-primary border-primary" 
-                        : "border-primary"
-                    )}>
-                      {selectedIds.has(option.id) && (
-                        <Check className="h-3 w-3 text-primary-foreground" />
-                      )}
-                    </div>
-                    <span>{option.name}</span>
                   </div>
-                ))
-              )}
+                  <span>{getDisplayValue(option)}</span>
+                </div>
+              ))}
             </div>
           </div>
         </DialogContent>
