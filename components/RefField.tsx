@@ -134,12 +134,12 @@ export function RefField({ name, schema, value, onChange, loadRefData }: RefFiel
         const primaryKeyValues = selectedValues
           .filter(v => v != null) // 过滤掉 null 和 undefined
           .map(v => {
-            // 如果已经是原始类型值，直接返回
-            if (isPrimitiveValue(v)) return v
-            // 否则尝试获取对象的主键值
-            return v[primaryKey]
+            // 如果已经是对象，获取其主键值
+            if (typeof v === 'object') return v[primaryKey]
+            // 否则假定值本身就是主键
+            return v
           })
-          .filter(Boolean) // 过滤掉无效值
+          .filter(Boolean)
         console.log('Returning primary keys:', primaryKeyValues)
         onChange(primaryKeyValues)
       } else {
@@ -148,14 +148,22 @@ export function RefField({ name, schema, value, onChange, loadRefData }: RefFiel
       }
     }
 
+    // 当 !isValueType 时，将 id 数组转换为对象数组用于显示
+    const displayValue = !isValueType && Array.isArray(value)
+      ? value.map(id => options.find(opt => opt[refSchema?.['x-primary-key'] || 'id'] === id))
+          .filter(Boolean)
+      : value || []
+
     return (
       <MultiSelectField
         title={schema.title || name}
-        value={value || []}
+        value={displayValue}
         options={options}
         onChange={handleMultiSelectChange}
         isSimpleType={isSimpleEnumType(refSchema)}
         searchPlaceholder={`Search ${schema.title || name}...`}
+        displayKey="name"
+        valueKey={refSchema?.['x-primary-key'] || 'id'}
       />
     )
   }
