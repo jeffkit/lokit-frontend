@@ -5,6 +5,34 @@ import { Label } from "@/components/ui/label"
 import { MultiSelectField } from './MultiSelectField'
 import { ObjectField } from './ObjectField'
 
+// 判断是否为简单枚举类型
+function isSimpleEnumType(schema: ExtendedJSONSchema7 | null): boolean {
+  return Boolean(
+    schema?.enum && 
+    ['string', 'number', 'boolean'].includes(schema.type as string)
+  )
+}
+
+// 判断是否为原始值
+function isPrimitiveValue(value: any): boolean {
+  return ['string', 'number', 'boolean'].includes(typeof value)
+}
+
+// 根据schema类型转换值
+function convertValueByType(value: string, type?: string | string[]): any {
+  if (!type || Array.isArray(type)) return value
+  
+  switch (type) {
+    case 'number':
+      return Number(value)
+    case 'boolean':
+      return value === 'true'
+    case 'string':
+    default:
+      return value
+  }
+}
+
 interface RefFieldProps {
   name: string
   schema: ExtendedJSONSchema7
@@ -106,8 +134,8 @@ export function RefField({ name, schema, value, onChange, loadRefData }: RefFiel
         const primaryKeyValues = selectedValues
           .filter(v => v != null) // 过滤掉 null 和 undefined
           .map(v => {
-            // 如果已经是字符串（主键），直接返回
-            if (typeof v === 'string') return v
+            // 如果已经是原始类型值，直接返回
+            if (isPrimitiveValue(v)) return v
             // 否则尝试获取对象的主键值
             return v[primaryKey]
           })
@@ -119,22 +147,24 @@ export function RefField({ name, schema, value, onChange, loadRefData }: RefFiel
         onChange(selectedValues)
       }
     }
-    console.log('with multi select')
+
     return (
       <MultiSelectField
         title={schema.title || name}
         value={value || []}
         options={options}
         onChange={handleMultiSelectChange}
-        isSimpleType={refKey === 'color'}
+        isSimpleType={isSimpleEnumType(refSchema)}
         searchPlaceholder={`Search ${schema.title || name}...`}
       />
     )
   }
 
   const handleChange = (selectedValue: string) => {
-    if (refKey === 'color') {
-      onChange(selectedValue)
+    // 如果是简单枚举类型，直接返回值
+    if (isSimpleEnumType(refSchema)) {
+      // 根据schema中定义的类型转换值
+      onChange(convertValueByType(selectedValue, refSchema?.type))
     } else {
       const selectedOption = options.find(opt => opt.id === selectedValue)
       // 如果不是值类型，只返回主键
@@ -148,8 +178,8 @@ export function RefField({ name, schema, value, onChange, loadRefData }: RefFiel
 
   // 获取当前值对应的选项ID
   const getCurrentValue = () => {
-    if (refKey === 'color') return value || ''
-    if (!isValueType && refSchema?.['x-primary-key']) return value || ''
+    if (isSimpleEnumType(refSchema)) return String(value ?? '')
+    if (!isValueType && refSchema?.['x-primary-key']) return String(value ?? '')
     return value?.id || value || ''
   }
 
