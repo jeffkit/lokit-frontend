@@ -12,13 +12,12 @@ interface FormFieldProps {
   schema: JSONSchema7
   value: any
   onChange: (value: any) => void
-  refData: Record<string, any>
-  loadRefData: (refKey: string) => Promise<any>
+  loadRefData: (refKey: string, value?: string) => Promise<any>
 }
 
-export function FormField({ name, schema, value, onChange, refData, loadRefData }: FormFieldProps) {
+export function FormField({ name, schema, value, onChange, loadRefData }: FormFieldProps) {
   if (schema.$ref) {
-    return <RefField name={name} schema={schema} value={value} onChange={onChange} refData={refData} loadRefData={loadRefData} />
+    return <RefField name={name} schema={schema} value={value} onChange={onChange} loadRefData={loadRefData} />
   }
 
   switch (schema.type) {
@@ -61,9 +60,9 @@ export function FormField({ name, schema, value, onChange, refData, loadRefData 
         </div>
       )
     case 'object':
-      return <ObjectField name={name} schema={schema} value={value} onChange={onChange} refData={refData} loadRefData={loadRefData} />
+      return <ObjectField name={name} schema={schema} value={value} onChange={onChange} loadRefData={loadRefData} />
     case 'array':
-      return <ArrayField name={name} schema={schema} value={value} onChange={onChange} refData={refData} loadRefData={loadRefData} />
+      return <ArrayField name={name} schema={schema} value={value} onChange={onChange} loadRefData={loadRefData} />
     default:
       return null
   }

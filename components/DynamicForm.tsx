@@ -40,7 +40,6 @@ export function DynamicForm({ schema, onSubmit, loadRefData }: DynamicFormProps)
               schema={property as JSONSchema7}
               value={formData[name]}
               onChange={(value) => handleChange(name, value)}
-              refData={{}}
               loadRefData={loadRefData}
             />
           ))}

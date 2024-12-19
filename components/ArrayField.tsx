@@ -6,17 +6,29 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { PlusCircle, X } from 'lucide-react'
 import { Input } from "@/components/ui/input"
+import { TableArrayField } from './TableArrayField'
 
 interface ArrayFieldProps {
-  name: string
-  schema: JSONSchema7
-  value: any[]
-  onChange: (value: any[]) => void
-  refData: Record<string, any>
-  loadRefData: (refKey: string, value?: string) => Promise<any>
+  name: string;
+  schema: JSONSchema7 & { 'x-display'?: string };
+  value: any[];
+  onChange: (value: any[]) => void;
+  loadRefData: (refKey: string, value?: string) => Promise<any>;
 }
 
-export function ArrayField({ name, schema, value = [], onChange, refData, loadRefData }: ArrayFieldProps) {
+export function ArrayField({ name, schema, value = [], onChange, loadRefData }: ArrayFieldProps) {
+  if (schema['x-display'] === 'table') {
+    return (
+      <TableArrayField
+        name={name}
+        schema={schema}
+        value={value}
+        onChange={onChange}
+        loadRefData={loadRefData}
+      />
+    );
+  }
+
   const handleAdd = () => {
     const newItem = schema.items && (schema.items as JSONSchema7).type === 'object' ? {} : ''
     onChange([...value, newItem])
@@ -50,7 +62,6 @@ export function ArrayField({ name, schema, value = [], onChange, refData, loadRe
                     variant="ghost" 
                     size="icon"
                     onClick={() => handleRemove(index)}
-                    className="h-8 w-8 p-0"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -58,44 +69,38 @@ export function ArrayField({ name, schema, value = [], onChange, refData, loadRe
               ))}
             </div>
           ) : (
-            value.map((item, index) => (
-              <div key={index} className="mb-4 relative">
-                <div className="flex flex-wrap -mx-2">
-                  {schema.items && (schema.items as JSONSchema7).properties &&
-                    Object.entries((schema.items as JSONSchema7).properties!).map(([fieldName, fieldSchema]) => (
-                      <div key={fieldName} className="px-2 w-full sm:w-1/2 md:w-1/3 lg:w-1/4 mb-2">
-                        <FormField
-                          name={`${name}[${index}].${fieldName}`}
-                          schema={fieldSchema as JSONSchema7}
-                          value={item[fieldName]}
-                          onChange={(fieldValue) => {
-                            const newItem = { ...item, [fieldName]: fieldValue };
-                            handleChange(index, newItem);
-                          }}
-                          refData={refData}
-                          loadRefData={loadRefData}
-                        />
-                      </div>
-                    ))
-                  }
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => handleRemove(index)} 
-                  className="absolute top-0 right-0 h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))
+            <div className="space-y-4">
+              {value.map((item, index) => (
+                <Card key={index}>
+                  <CardContent className="pt-6">
+                    <div className="flex justify-end mb-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemove(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <FormField
+                      name={`${name}[${index}]`}
+                      schema={schema.items as JSONSchema7}
+                      value={item}
+                      onChange={(value) => handleChange(index, value)}
+                      loadRefData={loadRefData}
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
-          <Button 
-            variant="outline" 
-            onClick={handleAdd} 
-            className="mt-2 w-full border-dashed"
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-2"
+            onClick={handleAdd}
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="h-4 w-4 mr-2" />
             Add {schema.title || name}
           </Button>
         </CardContent>

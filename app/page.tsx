@@ -34,6 +34,7 @@ const exampleSchema = {
     experiences: {
       type: 'array',
       title: 'Work Experiences',
+      'x-display': 'table',
       items: {
         type: 'object',
         properties: {
@@ -46,6 +47,17 @@ const exampleSchema = {
     skills: {
       type: 'array',
       title: 'Skills',
+      'x-component': 'Select',
+      'x-component-props': {
+        mode: 'multiple',
+        showSearch: true,
+        fieldNames: {
+          label: 'name',
+          value: 'id'
+        }
+      },
+      default: [],
+      'x-decorator': 'FormItem',
       items: {
         $ref: '#/definitions/skill'
       }
@@ -73,7 +85,7 @@ const exampleSchema = {
       }
     }
   }
-}
+} as JSONSchema7
 
 const loadRefData = async (refKey: string, value?: string) => {
   // Simulating async loading
@@ -114,7 +126,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24 w-full max-w-7xl mx-auto">
-      <DynamicForm schema={exampleSchema as JSONSchema7} onSubmit={handleSubmit} loadRefData={loadRefData} />
+      <DynamicForm schema={exampleSchema} onSubmit={handleSubmit} loadRefData={loadRefData} />
     </main>
   )
 }

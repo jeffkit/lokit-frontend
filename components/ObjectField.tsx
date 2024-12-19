@@ -9,11 +9,10 @@ interface ObjectFieldProps {
   schema: JSONSchema7
   value: any
   onChange: (value: any) => void
-  refData: Record<string, any>
   loadRefData: (refKey: string, value?: string) => Promise<any>
 }
 
-export function ObjectField({ name, schema, value, onChange, refData, loadRefData }: ObjectFieldProps) {
+export function ObjectField({ name, schema, value, onChange, loadRefData }: ObjectFieldProps) {
   const handleChange = (fieldName: string, fieldValue: any) => {
     onChange({
       ...value,
@@ -33,7 +32,6 @@ export function ObjectField({ name, schema, value, onChange, refData, loadRefDat
               schema={fieldSchema as JSONSchema7}
               value={value?.[fieldName]}
               onChange={(fieldValue) => handleChange(fieldName, fieldValue)}
-              refData={refData}
               loadRefData={loadRefData}
             />
           ))}

@@ -2,12 +2,16 @@ import { JSONSchema7 } from 'json-schema';
 
 export type FormDataType = Record<string, unknown>;
 
+export interface ExtendedJSONSchema7 extends JSONSchema7 {
+  'x-layout'?: 'vertical' | 'horizontal';
+}
+
 export interface FieldProps {
   name: string;
-  schema: JSONSchema7;
-  value: unknown;
-  onChange: (name: string, value: unknown) => void;
-  loadRefData: (refKey: string, value?: string) => Promise<unknown>;
+  schema: ExtendedJSONSchema7;
+  value: any;
+  onChange: (name: string, value: any) => void;
+  loadRefData: (refKey: string, value?: string) => Promise<any>;
 }
 
 export type FormSubmitHandler = (data: FormDataType) => void; 
