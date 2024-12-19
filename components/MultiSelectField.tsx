@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
@@ -131,6 +131,9 @@ export function MultiSelectField({
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Select {title}</DialogTitle>
+            <DialogDescription>
+              Choose one or more {title.toLowerCase()} from the list below.
+            </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
             <div className="flex items-center border rounded-md px-3">
@@ -139,6 +142,7 @@ export function MultiSelectField({
                 placeholder={searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                aria-label={`Search ${title}`}
               />
             </div>
             <div className="mt-2 max-h-[300px] overflow-y-auto rounded-md border">
